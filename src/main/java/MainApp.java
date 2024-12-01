@@ -54,6 +54,13 @@ public class MainApp {
         for (Map.Entry<String, Double> entry : result3.entrySet()) {
             System.out.println("Document ID: " + entry.getKey() + ", Cumulative TF-IDF: " + entry.getValue());
         }
+        
+        String[] searchTerms = new String[]{"cuaca", "hujan", "pesta", "acara"};
+        Map<String, SearchResult> result4 = searching.searchAdvanced(searchTerms);
+        System.out.println("\nAdvanced search result for terms '" + String.join("', '", searchTerms) + "':");
+        for (Map.Entry<String, SearchResult> entry : result4.entrySet()) {
+            System.out.println(entry.getValue());
+        }
     }
 
     
