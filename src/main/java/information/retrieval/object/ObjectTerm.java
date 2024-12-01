@@ -1,23 +1,19 @@
-package information.retrieval;
+package information.retrieval.object;
 
 public class ObjectTerm implements Comparable<ObjectTerm> {
-    
+
     private final String term;
     private int documentFrequency;
-    
+
     public ObjectTerm(String term) {
         this.term = term;
         this.documentFrequency = 0;
     }
 
-    public String getTerm() {
-        return term;
-    }
-
     public int getDocumentFrequency() {
         return documentFrequency;
     }
-    
+
     public void incrementDocumentFrequency() {
         documentFrequency++;
     }
@@ -26,7 +22,7 @@ public class ObjectTerm implements Comparable<ObjectTerm> {
     public int compareTo(ObjectTerm otherTerm) {
         return term.compareTo(otherTerm.term);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -34,7 +30,7 @@ public class ObjectTerm implements Comparable<ObjectTerm> {
         ObjectTerm that = (ObjectTerm) obj;
         return term.equals(that.term);
     }
-    
+
     @Override
     public int hashCode() {
         return term.hashCode();

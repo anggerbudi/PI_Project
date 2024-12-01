@@ -1,4 +1,4 @@
-package information.retrieval;
+package information.retrieval.utility;
 
 import jsastrawi.morphology.DefaultLemmatizer;
 import jsastrawi.morphology.Lemmatizer;
@@ -14,13 +14,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ResourceManager {
-    
+
     private static final Logger logger = Logger.getLogger(ResourceManager.class.getName());
 
-    
+
     /**
      * Initialize tokenizer.
-     * 
+     *
      * @param modelPath Path to tokenizer model.
      * @return Tokenizer object.
      */
@@ -37,10 +37,10 @@ public class ResourceManager {
         return null;
     }
 
-    
+
     /**
      * Initialize lemmatizer.
-     * 
+     *
      * @return Lemmatizer object.
      */
     public Lemmatizer initializeLemmatizer() {
@@ -60,10 +60,10 @@ public class ResourceManager {
         return null;
     }
 
-    
+
     /**
      * Load stopwords from file.
-     * 
+     *
      * @param stopWordsPath Path to stopwords file.
      * @return Set of stopwords.
      */
@@ -84,10 +84,10 @@ public class ResourceManager {
         return null;
     }
 
-    
+
     /**
      * Load configuration from file.
-     * 
+     *
      * @param configFilePath Path to configuration file.
      * @return Properties object containing configuration.
      */

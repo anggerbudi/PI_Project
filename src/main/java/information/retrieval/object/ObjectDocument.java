@@ -1,21 +1,17 @@
-package information.retrieval;
+package information.retrieval.object;
 
 public class ObjectDocument {
-    
+
     private final String documentID;
     private int termFrequency;
     private double tfidf;
-    
+
     public ObjectDocument(String documentID) {
         this.documentID = documentID;
         this.termFrequency = 1;
         this.tfidf = 0.0;
     }
-    
-    public String getDocumentID() {
-        return documentID;
-    }
-    
+
     public int getTermFrequency() {
         return termFrequency;
     }
@@ -31,7 +27,7 @@ public class ObjectDocument {
     public void incrementTermFrequency() {
         termFrequency++;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -39,7 +35,7 @@ public class ObjectDocument {
         ObjectDocument that = (ObjectDocument) obj;
         return documentID.equals(that.documentID);
     }
-    
+
     @Override
     public int hashCode() {
         return documentID.hashCode();

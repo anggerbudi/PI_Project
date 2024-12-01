@@ -1,7 +1,9 @@
-package information.retrieval;
+package information.retrieval.utility;
 
+import information.retrieval.WordList;
 import jsastrawi.morphology.Lemmatizer;
 import opennlp.tools.tokenize.Tokenizer;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +17,7 @@ public class WordProcessor {
     private final Lemmatizer lemmatizer;
     private final Set<String> stopwords;
 
-    public WordProcessor(Tokenizer tokenizer, Lemmatizer lemmatizer, Set<String> stopwords){
+    public WordProcessor(Tokenizer tokenizer, Lemmatizer lemmatizer, Set<String> stopwords) {
         this.tokenizer = tokenizer;
         this.lemmatizer = lemmatizer;
         this.stopwords = stopwords;
