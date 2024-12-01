@@ -3,6 +3,7 @@ package information.retrieval;
 import jsastrawi.morphology.Lemmatizer;
 
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Searching {
@@ -24,21 +25,25 @@ public class Searching {
      * @param term The term to search for.
      * @return A map of document IDs and their corresponding TF-IDF values.
      */
-    public Map<String, Double> searchSingleTerm(String term) {
-        ObjectTerm objectTerm = new ObjectTerm(term);
-        Map<String, ObjectDocument> result = wordList.getInvertedIndex().get(objectTerm);
+    public Map<String, SearchResult> searchSingleTerm(String term) {
+        String lemmatizedTerm = lemmatizeTerm(term);
+        ObjectTerm objectTerm = new ObjectTerm(lemmatizedTerm);
+        Map<String, ObjectDocument> postingList = wordList.getInvertedIndex().get(objectTerm);
 
-        if (result == null) {
-            logger.log(java.util.logging.Level.INFO, "Term '" + term + "' not found in the word list.");
+        if (postingList == null) {
+            logger.log(Level.INFO, "Term '" + term + "' not found in the word list.");
             return Collections.emptyMap();
         }
 
-        Map<String, Double> rankedResult = new HashMap<>();
-        for (Map.Entry<String, ObjectDocument> entry : result.entrySet()) {
-            rankedResult.put(entry.getKey(), entry.getValue().getTfidf());
+        Map<String, SearchResult> results = new HashMap<>();
+        for (Map.Entry<String, ObjectDocument> entry : postingList.entrySet()) {
+            String docId = entry.getKey();
+            double tfidf = entry.getValue().getTfidf();
+            results.put(docId, new SearchResult(docId));
+            results.get(docId).update(tfidf, lemmatizedTerm);
         }
 
-        return sortByRankDescending(rankedResult);
+        return sortByRankDescending(results);
     }
 
 
@@ -48,49 +53,40 @@ public class Searching {
      * @param terms The terms to search for.
      * @return A map of document IDs and their corresponding cumulative TF-IDF values.
      */
-    public Map<String, Double> searchAndRanked(String[] terms) {
+    public Map<String, SearchResult> searchAND(String[] terms) {
         Map<ObjectTerm, Map<String, ObjectDocument>> invertedIndex = wordList.getInvertedIndex();
 
-        Map<String, ObjectDocument> result = null;
+        Set<String> commonDocs = new HashSet<>();
+        Map<String, SearchResult> results = new HashMap<>();
 
-        for (String term : terms) {
-            String lemmatizedterm = lemmatizeTerm(term);
+        for (int i = 0; i < terms.length; i++) {
+            String lemmatizedterm = lemmatizeTerm(terms[i]);
             ObjectTerm objectTerm = new ObjectTerm(lemmatizedterm);
-            Map<String, ObjectDocument> currentPostingList = invertedIndex.get(objectTerm);
+            Map<String, ObjectDocument> postingList = invertedIndex.get(objectTerm);
 
-            if (currentPostingList == null) {
-                logger.log(java.util.logging.Level.INFO, "Term '" + term + "' not found in the word list.");
+            if (postingList == null) {
+                logger.log(Level.INFO, "Term '" + terms[i] + "' not found in the word list.");
                 return Collections.emptyMap();
             }
 
-            if (result == null) {
-                result = new HashMap<>(currentPostingList);
+            if (i==0) {
+                commonDocs.addAll(postingList.keySet());
             } else {
-                result.keySet().removeIf(docID -> !currentPostingList.containsKey(docID));
+                commonDocs.retainAll(postingList.keySet());
             }
-
-            if (result.isEmpty()) {
-                logger.log(java.util.logging.Level.INFO, "No documents found containing all terms.");
+            
+            if (commonDocs.isEmpty()) {
+                logger.log(Level.INFO, "No documents found for terms containing all terms.");
                 return Collections.emptyMap();
             }
-        }
 
-        Map<String, Double> rankedResult = new HashMap<>();
-        assert result != null;
-        for (String docId : result.keySet()) {
-            double cumulativeScore = 0.0;
-
-            for (String term : terms) {
-                String lemmatizedTerm = lemmatizeTerm(term);
-                ObjectTerm objectTerm = new ObjectTerm(lemmatizedTerm);
-                Map<String, ObjectDocument> postingList = invertedIndex.get(objectTerm);
-                if (postingList != null && postingList.containsKey(docId)) {
-                    cumulativeScore += postingList.get(docId).getTfidf();
-                }
+            for (String docId : commonDocs) {
+                double tfidf = postingList.get(docId).getTfidf();
+                results.computeIfAbsent(docId, SearchResult::new).update(tfidf, lemmatizedterm);
             }
-            rankedResult.put(docId, cumulativeScore);
         }
-        return sortByRankDescending(rankedResult);
+
+        return sortByRankDescending(results);
     }
 
 
@@ -100,68 +96,71 @@ public class Searching {
      * @param terms The terms to search for.
      * @return A map of document IDs and their corresponding TF-IDF values.
      */
-    public Map<String, Double> searchOrRanked(String[] terms) {
+    public Map<String, SearchResult> searchOR(String[] terms) {
         Map<ObjectTerm, Map<String, ObjectDocument>> invertedIndex = wordList.getInvertedIndex();
-
-        Map<String, Double> rankedResult = new HashMap<>();
+        Map<String, SearchResult> results = new HashMap<>();
 
         for (String term : terms) {
             String lemmatizedTerm = lemmatizeTerm(term);
             ObjectTerm objectTerm = new ObjectTerm(lemmatizedTerm);
-            Map<String, ObjectDocument> currentPostingList = invertedIndex.get(objectTerm);
+            Map<String, ObjectDocument> postingList = invertedIndex.get(objectTerm);
 
-            if (currentPostingList != null) {
-                for (Map.Entry<String, ObjectDocument> entry : currentPostingList.entrySet()) {
-                    String docId = entry.getKey();
-                    double tfidf = entry.getValue().getTfidf();
+            if (postingList == null) continue;
 
-                    rankedResult.merge(docId, tfidf, Double::sum);
-                }
+            for (Map.Entry<String, ObjectDocument> entry : postingList.entrySet()) {
+                String docId = entry.getKey();
+                double tfidf = entry.getValue().getTfidf();
+                results.computeIfAbsent(docId, SearchResult::new).update(tfidf, lemmatizedTerm);
             }
         }
-        return sortByRankDescending(rankedResult);
+        return sortByRankDescending(results);
     }
-    
-    
+
+
+    /**
+     * Search for multiple terms in the word list using "AND" and "OR" and return the results.
+     *
+     * @param terms The terms to search for.
+     * @return A map of document IDs and their corresponding TF-IDF values.
+     */
     public Map<String, SearchResult> searchAdvanced(String[] terms) {
         Map<ObjectTerm, Map<String, ObjectDocument>> invertedIndex = wordList.getInvertedIndex();
-        
+
         Map<String, SearchResult> results = new HashMap<>();
-        
         Set<String> missingTerms = new HashSet<>();
-        
+
         for (String term : terms) {
             String lemmatizedTerm = lemmatizeTerm(term);
             ObjectTerm objectTerm = new ObjectTerm(lemmatizedTerm);
-            Map<String, ObjectDocument> currentPostingList = invertedIndex.get(objectTerm);
-            
-            if (currentPostingList == null) {
+            Map<String, ObjectDocument> postingList = invertedIndex.get(objectTerm);
+
+            if (postingList == null) {
                 missingTerms.add(term);
             } else {
-                for (Map.Entry<String, ObjectDocument> entry : currentPostingList.entrySet()) {
+                for (Map.Entry<String, ObjectDocument> entry : postingList.entrySet()) {
                     String docId = entry.getKey();
                     double tfidf = entry.getValue().getTfidf();
-                    
+
                     results.computeIfAbsent(docId, SearchResult::new).update(tfidf, lemmatizedTerm);
                 }
             }
         }
-        
+
         List<SearchResult> sortedResults = new ArrayList<>(results.values());
         sortedResults.sort((r1, r2) -> {
             int termComparison = Integer.compare(r2.getMatchedTermsCount(), r1.getMatchedTermsCount());
             return termComparison != 0 ? termComparison : Double.compare(r2.getCumulativeTfIdf(), r1.getCumulativeTfIdf());
         });
-        
+
         Map<String, SearchResult> sortedResultsMap = new LinkedHashMap<>();
         for (SearchResult result : sortedResults) {
             sortedResultsMap.put(result.getDocumentId(), result);
         }
-        
+
         if (!missingTerms.isEmpty()) {
             System.out.println("The following terms were not found in the search: " + missingTerms);
         }
-        
+
         return sortedResultsMap;
     }
 
@@ -169,20 +168,27 @@ public class Searching {
     /**
      * Sort a map by value in descending order.
      *
-     * @param unsortedMap The unsorted map.
+     * @param unsortedResults The unsorted map.
      * @return The sorted map.
      */
-    private Map<String, Double> sortByRankDescending(Map<String, Double> unsortedMap) {
-        List<Map.Entry<String, Double>> list = new ArrayList<>(unsortedMap.entrySet());
-        list.sort((entry1, entry2) -> Double.compare(entry2.getValue(), entry1.getValue()));
+    private Map<String, SearchResult> sortByRankDescending(Map<String, SearchResult> unsortedResults) {
+        List<Map.Entry<String, SearchResult>> sortedEntries = new ArrayList<>(unsortedResults.entrySet());
+        sortedEntries.sort((e1, e2) -> Double.compare(e2.getValue().getCumulativeTfIdf(), e1.getValue().getCumulativeTfIdf()));
 
-        Map<String, Double> sortedMap = new LinkedHashMap<>();
-        for (Map.Entry<String, Double> entry : list) {
+        Map<String, SearchResult> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, SearchResult> entry : sortedEntries) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
         return sortedMap;
     }
 
+
+    /**
+     * Lemmatize a term.
+     *
+     * @param term The term to lemmatize.
+     * @return The lemmatized term.
+     */
     private String lemmatizeTerm(String term) {
         return lemmatizer.lemmatize(term.toLowerCase());
     }
