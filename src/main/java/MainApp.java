@@ -6,6 +6,7 @@ import opennlp.tools.tokenize.TokenizerModel;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +34,11 @@ public class MainApp {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error processing word list.", e);
         }
+        
+        Searching searching = new Searching(wordList);
+        
+        Map<String, Double> result = searching.searchSingleTerm("cuaca");
+        System.out.println("Search result for term 'cuaca': " + result);
     }
 
     
@@ -60,7 +66,7 @@ public class MainApp {
      * Initialize the tokenizer
      */
     private static void initializeTokenizer() {
-        String modelPath = "src/data-model/langdetect-183.bin";
+        String modelPath = "src/data-model/id-token.bin";
         try (InputStream modelIn = new FileInputStream(modelPath)) {
             TokenizerModel model = new TokenizerModel(modelIn);
             tokenizer = new TokenizerME(model);
