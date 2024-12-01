@@ -1,8 +1,6 @@
 package information.retrieval;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -11,8 +9,8 @@ import java.util.logging.Logger;
 public class ReadFile {
 
     private static final Logger logger = Logger.getLogger(ReadFile.class.getName());
-
     
+
     /**
      * Read documents in a folder and return the contents
      *
@@ -43,7 +41,7 @@ public class ReadFile {
             String canonicalFolderPath = directory.getCanonicalPath();
 
             for (File file : files) {
-                if (file.isFile()) {
+                if (file.isFile() && file.canRead()) {
                     String canonicalFilePath = file.getCanonicalPath();
                     if (!canonicalFilePath.startsWith(canonicalFolderPath)) {
                         logger.severe("File path is outside the folder: " + file.getName());

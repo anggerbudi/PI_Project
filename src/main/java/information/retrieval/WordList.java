@@ -64,8 +64,20 @@ public class WordList {
         }
     }
     
+    
+    /**
+     * Get a copy of the inverted index to ensure encapsulation
+     *
+     * @return inverted index
+     */
     public Map<ObjectTerm, Map<String, ObjectDocument>> getInvertedIndex() {
-        return invertedIndex;
+        Map<ObjectTerm, Map<String, ObjectDocument>> copy = new TreeMap<>();
+        for (Map.Entry<ObjectTerm, Map<String, ObjectDocument>> entry : invertedIndex.entrySet()) {
+            Map<String, ObjectDocument> postingListCopy = new TreeMap<>(entry.getValue());
+            copy.put(entry.getKey(), postingListCopy);
+        }
+        return Collections.unmodifiableMap(copy);
     }
+    
     
 }

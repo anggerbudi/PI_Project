@@ -1,13 +1,7 @@
 package information.retrieval;
 
-import jsastrawi.morphology.DefaultLemmatizer;
+import jsastrawi.morphology.Lemmatizer;
 import opennlp.tools.tokenize.Tokenizer;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -18,19 +12,13 @@ public class WordProcessor {
 
     private static final Logger logger = Logger.getLogger(WordProcessor.class.getName());
     private final Tokenizer tokenizer;
-    private final DefaultLemmatizer lemmatizer;
+    private final Lemmatizer lemmatizer;
     private final Set<String> stopwords;
 
-    public WordProcessor(String tokenizerModelPath, Set<String> stopwords, DefaultLemmatizer lemmatizer) throws IOException {
-        try (InputStream modelIn = new FileInputStream(tokenizerModelPath)) {
-            TokenizerModel model = new TokenizerModel(modelIn);
-            this.tokenizer = new TokenizerME(model);
-            this.lemmatizer = lemmatizer;
-            this.stopwords = stopwords;
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Error loading tokenizer model: " + tokenizerModelPath, e);
-            throw e;
-        }
+    public WordProcessor(Tokenizer tokenizer, Lemmatizer lemmatizer, Set<String> stopwords){
+        this.tokenizer = tokenizer;
+        this.lemmatizer = lemmatizer;
+        this.stopwords = stopwords;
     }
 
 
@@ -50,7 +38,7 @@ public class WordProcessor {
                 .toArray(String[]::new);
     }
 
-    
+
     /**
      * Process documents in a folder by reading the files and adding the terms to the word list
      *
@@ -60,12 +48,12 @@ public class WordProcessor {
     public void processDocuments(String folderPath, WordList wordList) {
         ReadFile readFile = new ReadFile();
         Map<String, String> fileContents = readFile.ReadDocuments(folderPath);
-        
+
         if (fileContents.isEmpty()) {
             logger.log(Level.INFO, "No files found in the folder.");
             return;
         }
-        
+
         for (Map.Entry<String, String> entry : fileContents.entrySet()) {
             String fileName = entry.getKey();
             if (fileName.endsWith(".txt")) {
