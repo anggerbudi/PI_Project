@@ -35,10 +35,25 @@ public class MainApp {
             logger.log(Level.SEVERE, "Error processing word list.", e);
         }
         
-        Searching searching = new Searching(wordList);
+        Searching searching = new Searching(wordList, lemmatizer);
         
         Map<String, Double> result = searching.searchSingleTerm("cuaca");
-        System.out.println("Search result for term 'cuaca': " + result);
+        System.out.println("Search result for term 'cuaca':");
+        for (Map.Entry<String, Double> entry : result.entrySet()) {
+            System.out.println("Document ID: " + entry.getKey() + ", TF-IDF: " + entry.getValue());
+        }
+        
+        Map<String, Double> result2 = searching.searchAndRanked(new String[]{"cuaca", "hujan"});
+        System.out.println("\nSearch result for terms 'cuaca' and 'hujan':");
+        for (Map.Entry<String, Double> entry : result2.entrySet()) {
+            System.out.println("Document ID: " + entry.getKey() + ", Cumulative TF-IDF: " + entry.getValue());
+        }
+        
+        Map<String, Double> result3 = searching.searchOrRanked(new String[]{"cuaca", "hujan"});
+        System.out.println("\nSearch result for terms 'cuaca' or 'hujan':");
+        for (Map.Entry<String, Double> entry : result3.entrySet()) {
+            System.out.println("Document ID: " + entry.getKey() + ", Cumulative TF-IDF: " + entry.getValue());
+        }
     }
 
     
