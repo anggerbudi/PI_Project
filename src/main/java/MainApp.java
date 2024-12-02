@@ -47,21 +47,39 @@ public class MainApp {
         }
 
         Searching searching = new Searching(wordList, lemmatizer);
+        
+        long startTime, endTime;
 
+        startTime = System.currentTimeMillis();
         Map<String, ObjectSearchResult> singleTermResult = searching.searchSingleTerm("cuaca");
+        endTime = System.currentTimeMillis();
+
+        System.out.println("Time taken to search for term 'cuaca': " + (endTime - startTime) + " ms");
         System.out.println("Search result for term 'cuaca':");
         ObjectSearchResult.printResults(singleTermResult);
 
+        startTime = System.currentTimeMillis();
         Map<String, ObjectSearchResult> andResult = searching.searchAND(new String[]{"cuaca", "hujan"});
+        endTime = System.currentTimeMillis();
+
+        System.out.println("Time taken to search for terms 'cuaca' and 'hujan': " + (endTime - startTime) + " ms");
         System.out.println("\nSearch result for terms 'cuaca' and 'hujan':");
         ObjectSearchResult.printResults(andResult);
-
+        
+        startTime = System.currentTimeMillis();
         Map<String, ObjectSearchResult> orResult = searching.searchOR(new String[]{"cuaca", "hujan"});
+        endTime = System.currentTimeMillis();
+
+        System.out.println("Time taken to search for terms 'cuaca' or 'hujan': " + (endTime - startTime) + " ms");
         System.out.println("\nSearch result for terms 'cuaca' or 'hujan':");
         ObjectSearchResult.printResults(orResult);
 
         String[] searchTerms = new String[]{"cuaca", "hujan", "pesta", "acara"};
+        startTime = System.currentTimeMillis();
         Map<String, ObjectSearchResult> advancedResult = searching.searchAdvanced(searchTerms);
+        endTime = System.currentTimeMillis();
+        
+        System.out.println("Time taken to search for terms '" + String.join("', '", searchTerms) + "': " + (endTime - startTime) + " ms");
         System.out.println("\nAdvanced search result for terms '" + String.join("', '", searchTerms) + "':");
         ObjectSearchResult.printResults(advancedResult);
     }
